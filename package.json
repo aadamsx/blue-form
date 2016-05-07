@@ -1,0 +1,15 @@
+{
+  "name": "blue-form",
+  "version": "0.0.1",
+  "description": "A React form component for Meteor.js",
+  "main": "lib/blue-forms.js",
+  "scripts": {
+  },
+  "author": "Ryan Swapp <ryancswapp@gmail.com> (http://ryanswapp.com)",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.4"
+  }
+}
