@@ -1,3 +1,6 @@
+var path = require('path');
+var webpack = require('webpack');
+
 module.exports = {
   entry: "./src/index.js",
   output: {
@@ -6,7 +9,7 @@ module.exports = {
     filename: 'blue-forms.js',
     path: './lib'
   },
-  devtool: 'inline-source-map',
+  devtool: 'eval',
   module: {
     loaders: [
       {
@@ -23,5 +26,15 @@ module.exports = {
       commonjs2: 'react',
       amd: 'react'
     }
+  },
+  resolve: {
+    extensions: [
+      '',
+      '.js'
+    ],
+    modulesDirectories: [
+      'src',
+      'node_modules'
+    ]
   }
 };
