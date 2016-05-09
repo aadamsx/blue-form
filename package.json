@@ -2,13 +2,14 @@
   "name": "blue-form",
   "version": "0.0.1",
   "description": "A React form component for Meteor.js",
-  "main": "lib/blue-forms.js",
-  "scripts": {},
+  "main": "lib/blue-form.js",
+  "scripts": {
+    "bundle": "NODE_ENV=production webpack -p --config --progress"
+  },
   "author": "Ryan Swapp <ryancswapp@gmail.com> (http://ryanswapp.com)",
   "license": "ISC",
   "peerDependencies": {
-    "react": "^15.0.0",
-    "react-dom": "^15.0.0"
+    "react": "0.14.x || 15.x.x"
   },
   "devDependencies": {
     "babel-core": "^6.8.0",

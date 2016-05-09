@@ -1,15 +1,33 @@
 var path = require('path');
 var webpack = require('webpack');
 
+var plugins = [];
+
+/* Searches for equal or similar files and deduplicates them in the output */
+plugins.push(new webpack.optimize.DedupePlugin());
+
+/* Reduces total file size */
+plugins.push(new webpack.optimize.OccurenceOrderPlugin(true));
+
+/* Minifies the bundle */
+plugins.push(new webpack.optimize.UglifyJsPlugin({minimize: true, compress: { warnings: false }}));
+
+/* Reduce React lib size */
+plugins.push(new webpack.DefinePlugin({
+  'process.env': {
+    'NODE_ENV': JSON.stringify('production')
+  }
+}));
+
 module.exports = {
   entry: "./src/index.js",
   output: {
-    library: 'BlueForms',
-    libraryTarget: 'commonjs2',
-    filename: 'blue-forms.js',
-    path: './lib'
+    filename: 'blue-form.js',
+    path: path.join(__dirname, '/lib'),
+    library: 'BlueForm',
+    libraryTarget: 'umd'
   },
-  devtool: 'eval',
+  devtool: 'source-map',
   module: {
     loaders: [
       {
@@ -19,14 +37,17 @@ module.exports = {
       }
     ]
   },
-  externals: {
-    react: {
-      root: 'React',
-      commonjs: 'react',
-      commonjs2: 'react',
-      amd: 'react'
+  plugins: plugins,
+  externals: [
+    {
+      react: {
+        root: 'React',
+        commonjs2: 'react',
+        commonjs: 'react',
+        amd: 'react'
+      }
     }
-  },
+  ],
   resolve: {
     extensions: [
       '',

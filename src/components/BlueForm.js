@@ -26,7 +26,7 @@ class BlueForm extends React.Component {
       disabled: false,
       errors: {},
       formDoc: formDoc
-    }
+    };
   }
   componentWillReceiveProps(nextProps) {
     const { data, schema, type = 'insert' } = nextProps;
@@ -51,7 +51,7 @@ class BlueForm extends React.Component {
       schema: schema,
       selectOnChange: this.selectOnChange,
       type: type
-    }
+    };
     if (data && type === 'update') {
       assignIn(context, {
         data: data
@@ -66,7 +66,7 @@ class BlueForm extends React.Component {
     let val = e.target.value;
 
     if (val === '') {
-      unset(formDoc, name)
+      unset(formDoc, name);
     } else {
       set(formDoc, name, val);
     }
@@ -89,7 +89,7 @@ class BlueForm extends React.Component {
     }
 
     if (val === '' || val === '(Select One)') {
-      unset(formDoc, name)
+      unset(formDoc, name);
     } else {
       set(formDoc, name, val);
     }
