@@ -10,7 +10,7 @@ class BlueFormErrors extends React.Component {
     let renderErrors = function(errors) {
       let errorKeys = keys(errors);
       return errorKeys.map((error, i) => {
-        return <li key={ i }>{ errors[error] }</li>
+        return <li key={ i } dangerouslySetInnerHTML={ {__html: errors[error]} } />;
       });
     };
     return (

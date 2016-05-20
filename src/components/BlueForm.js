@@ -63,7 +63,20 @@ class BlueForm extends React.Component {
     let { formDoc } = this.state;
 
     let name = e.target.getAttribute('name');
-    let val = e.target.value;
+    let type = e.target.nodeName;
+    let val;
+
+    /**
+     * Semantic UI checkbox fires an event with the target being the
+     * checkbox label. We use previousSibling to check the value of the
+     * actual input. We've added an onClick handler to the div that
+     * contains the checkbox.
+     */
+    if (type === "LABEL") {
+      val = e.target.previousSibling.checked;
+    } else {
+      val = e.target.value;
+    }
 
     if (val === '') {
       unset(formDoc, name);
@@ -97,7 +110,6 @@ class BlueForm extends React.Component {
     this.setState({
       formDoc
     });
-
     if (autosave) {
       this.onSubmit();
     }

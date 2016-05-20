@@ -4,7 +4,8 @@
   "description": "A React form component for Meteor.js",
   "main": "lib/blue-form.js",
   "scripts": {
-    "bundle": "NODE_ENV=production webpack -p --config --progress"
+    "bundle": "NODE_ENV=production webpack -p --config --progress",
+    "dev": "NODE_ENV=production webpack -p --config --progress --watch"
   },
   "author": "Ryan Swapp <ryancswapp@gmail.com> (http://ryanswapp.com)",
   "license": "ISC",
