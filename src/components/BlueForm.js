@@ -15,6 +15,7 @@ class BlueForm extends React.Component {
     this.selectOnChange = this.selectOnChange.bind(this);
     this.cleanFormDoc = this.cleanFormDoc.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.validateInput = this.validateInput.bind(this);
 
     const { data = {}, schema, type = 'insert' } = this.props;
     let formDoc = {};
@@ -87,6 +88,8 @@ class BlueForm extends React.Component {
     this.setState({
       formDoc
     });
+
+    this.validateInput();
   }
   selectOnChange(e) {
     let { autosave } = this.props;
@@ -110,8 +113,30 @@ class BlueForm extends React.Component {
     this.setState({
       formDoc
     });
+
     if (autosave) {
       this.onSubmit();
+    }
+
+    this.validateInput();
+  }
+  validateInput() {
+    let { context, formDoc } = this.state;
+    let cleanDoc = this.cleanFormDoc(formDoc);
+    let isValid = context.validate(cleanDoc);
+    let errors = {};
+    if (isValid) {
+      this.setState({
+        errors: errors
+      });
+    } else {
+      let invalidKeys = context.invalidKeys();
+      invalidKeys.forEach(function(key) {
+        errors[key.name] = context.keyErrorMessage(key.name);
+      });
+      this.setState({
+        errors: errors
+      });
     }
   }
   cleanFormDoc(formDoc) {
@@ -174,7 +199,7 @@ class BlueForm extends React.Component {
     const { errors } = this.state;
     return (
       <div>
-        { keys(errors).length > 0 ? <BlueFormErrors errors={ errors } /> : '' }
+        {/* keys(errors).length > 0 ? <BlueFormErrors errors={ errors } /> : '' */}
         <form className="ui form" onSubmit={ this.onSubmit }>
           { children }
         </form>

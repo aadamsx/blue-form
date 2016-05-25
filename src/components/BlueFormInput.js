@@ -6,6 +6,7 @@ import set from 'lodash/set';
 class BlueFormInput extends React.Component {
   constructor(props, context) {
     super(props);
+    this.renderError = this.renderError.bind(this);
   }
   componentDidMount() {
     const { type } = this.props;
@@ -14,6 +15,17 @@ class BlueFormInput extends React.Component {
      */
     if (type === 'checkbox') {
       $('.ui.checkbox').checkbox();
+    }
+  }
+  renderError() {
+    const { name } = this.props;
+    const { errors } = this.context;
+    if (!!errors[name]) {
+      return (
+          <div className="ui pointing red basic label">{ errors[name] }</div>
+      );
+    } else {
+      return '';
     }
   }
   render() {
@@ -31,6 +43,7 @@ class BlueFormInput extends React.Component {
               <option value={ true }>Yes</option>
               <option value={ false }>No</option>
             </select>
+            { this.renderError() }
           </div>
         );
       case 'checkbox':
@@ -40,6 +53,7 @@ class BlueFormInput extends React.Component {
               <input name={ name } id={ name } type="checkbox" onChange={ inputOnChange } value={ !!get(formDoc, name) ? get(formDoc, name) : false }/>
               <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObject.label} } />
             </div>
+            { this.renderError() }
           </div>
         );
       case 'mask':
@@ -47,6 +61,7 @@ class BlueFormInput extends React.Component {
             <div className={ !!errors[name] ? 'field error' : 'field' }>
               <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObject.label} } />
               <MaskedInput mask={ mask.mask } placeholder={ mask.placeholder } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } value={ get(formDoc, name) }/>
+            { this.renderError() }
             </div>
         );
       case 'select':
@@ -59,6 +74,7 @@ class BlueFormInput extends React.Component {
                   return <option key={ i } value={ val }>{ val }</option>;
               }) }
             </select>
+            { this.renderError() }
           </div>
         );
       case 'submit':
@@ -72,6 +88,7 @@ class BlueFormInput extends React.Component {
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObject.label} } />
             <textarea name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } value={ get(formDoc, name) }/>
+            { this.renderError() }
           </div>
         );
       default:
@@ -79,6 +96,7 @@ class BlueFormInput extends React.Component {
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObject.label} } />
             <input type={ type } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } value={ get(formDoc, name) }/>
+            { this.renderError() }
           </div>
         );
     }
