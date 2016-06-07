@@ -1,8 +1,11 @@
 import React from 'react';
 import BlueFormErrors from 'components/BlueFormErrors.js';
+import BlueFormInput from 'components/BlueFormInput.js';
+import BlueFormIf from 'components/BlueFormIf.js';
 
 import assignIn from 'lodash/assignIn';
 import forOwn from 'lodash/forOwn';
+import get from 'lodash/get';
 import keys from 'lodash/keys';
 import set from 'lodash/set';
 import throttle from 'lodash/throttle';
@@ -14,6 +17,7 @@ class BlueForm extends React.Component {
     this.inputOnChange = this.inputOnChange.bind(this);
     this.selectOnChange = this.selectOnChange.bind(this);
     this.cleanFormDoc = this.cleanFormDoc.bind(this);
+    this.onSelectDate = this.onSelectDate.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.validateInput = this.validateInput.bind(this);
 
@@ -48,6 +52,7 @@ class BlueForm extends React.Component {
       formDoc: formDoc,
       errors: errors,
       inputOnChange: this.inputOnChange,
+      onSelectDate: this.onSelectDate,
       onSubmit: this.onSubmit,
       schema: schema,
       selectOnChange: this.selectOnChange,
@@ -60,23 +65,29 @@ class BlueForm extends React.Component {
     }
     return context;
   }
+  onSelectDate(date, name) {
+    let { formDoc } = this.state;
+
+    if (date === '') {
+      unset(formDoc, name);
+    } else {
+      set(formDoc, name, date);
+    }
+
+    this.setState({
+      formDoc
+    });
+
+    this.validateInput();
+  }
   inputOnChange(e) {
+    let { autosave } = this.context;
     let { formDoc } = this.state;
 
     let name = e.target.getAttribute('name');
-    let type = e.target.nodeName;
-    let val;
-
-    /**
-     * Semantic UI checkbox fires an event with the target being the
-     * checkbox label. We use previousSibling to check the value of the
-     * actual input. We've added an onClick handler to the div that
-     * contains the checkbox.
-     */
-    if (type === "LABEL") {
-      val = e.target.previousSibling.checked;
-    } else {
-      val = e.target.value;
+    let val = e.target.value;
+    if (e.checkbox) {
+      val = e.target.checked;
     }
 
     if (val === '') {
@@ -88,6 +99,10 @@ class BlueForm extends React.Component {
     this.setState({
       formDoc
     });
+
+    if (autosave) {
+      this.onSubmit();
+    }
 
     this.validateInput();
   }
@@ -195,16 +210,35 @@ class BlueForm extends React.Component {
     }
   }
   render() {
-    const { children } = this.props;
-    const { errors } = this.state;
-    return (
-      <div>
-        {/* keys(errors).length > 0 ? <BlueFormErrors errors={ errors } /> : '' */}
-        <form className="ui form" onSubmit={ this.onSubmit }>
+    const { children, schema } = this.props;
+    const { errors, formDoc } = this.state;
+    if (!!children) {
+      return (
+          <div>
+          {/* keys(errors).length > 0 ? <BlueFormErrors errors={ errors } /> : '' */}
+          <form className="ui form" onSubmit={ this.onSubmit }>
           { children }
         </form>
-      </div>
-    );
+          </div>
+      );
+    } else {
+      return (
+        <form className="ui form" onSubmit={ this.onSubmit }>
+          { keys(schema._schema).map((key, i) => {
+            let schemaObj = schema._schema[key];
+            if (get(schemaObj, 'blueform.conditional')) {
+              return (
+                  <BlueFormIf key={ i } condition={ get(schemaObj, 'blueform.conditional.condition') } data={ get(schemaObj, 'blueform.conditional.data') } property={ get(schemaObj, 'blueform.conditional.property') } value={ get(schemaObj, 'blueform.conditional.value') }>
+                    <BlueFormInput name={ key } />
+                  </BlueFormIf>
+              );
+            } else {
+              return <BlueFormInput key={ i } name={ key } />;
+            }
+          })}
+        </form>
+      );
+    }
   }
 };
 
@@ -222,6 +256,7 @@ BlueForm.childContextTypes = {
   errors: React.PropTypes.object,
   formDoc: React.PropTypes.object,
   inputOnChange: React.PropTypes.func,
+  onSelectDate: React.PropTypes.func,
   onSubmit: React.PropTypes.func,
   schema: React.PropTypes.object,
   selectOnChange: React.PropTypes.func,
