@@ -56,6 +56,10 @@ module.exports = {
     modulesDirectories: [
       'src',
       'node_modules'
-    ]
+    ],
+    fallback: '~/Documents/code/javascript/meteor/apps/intake_zen/app/node_modules'
+  },
+  resolveLoader: {
+    fallback: '~/Documents/code/javascript/meteor/apps/intake_zen/app/node_modules'
   }
 };

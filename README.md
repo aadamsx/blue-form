@@ -34,3 +34,10 @@ import { BlueForm, BlueFormInput } from 'blue-form';
 </div>
 
 ```
+
+Alternatively you can have the form build everything for you:
+
+```
+<BlueForm submit={ this.onSubmit } type="update" data={ incident } schema={ Incident_carAccidentForm } autosave={ true } />
+
+```
