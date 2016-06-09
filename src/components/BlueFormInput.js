@@ -104,7 +104,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <div className="ui checkbox">
-            <input name={ name } id={ name } type="checkbox" checked={ !!get(formDoc, name) ? get(formDoc, name) : false } value={ !!get(formDoc, name) ? get(formDoc, name) : false }/>
+            <input name={ name } id={ name } type="checkbox" defaultChecked={ !!get(formDoc, name) ? get(formDoc, name) : false } defaultValue={ !!get(formDoc, name) ? get(formDoc, name) : false }/>
               <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObject.label} } />
             </div>
             { this.renderError() }
@@ -114,7 +114,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObject.label} } />
-            <input type={ type } className="datetimepicker" name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } value={ get(formDoc, name) }/>
+            <input type={ type } className="datetimepicker" name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } defaultValue={ get(formDoc, name) }/>
             { this.renderError() }
           </div>
         );
@@ -133,6 +133,9 @@ class BlueFormInput extends React.Component {
             <select name={ name } onChange={ selectOnChange } value={ get(formDoc, name) }>
               <option value="">(Select One)</option>
               { schemaObject.allowedValues.map( (val, i) => {
+                  if (val === '') {
+                    return null;
+                  }
                   return <option key={ i } value={ val }>{ val }</option>;
               }) }
             </select>
@@ -149,7 +152,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObject.label} } />
-            <input type={ type } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } value={ get(formDoc, name) }/>
+            <input type={ type } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } defaultValue={ get(formDoc, name) }/>
             { this.renderError() }
           </div>
         );

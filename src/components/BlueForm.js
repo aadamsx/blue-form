@@ -6,7 +6,9 @@ import BlueFormIf from 'components/BlueFormIf.js';
 import assignIn from 'lodash/assignIn';
 import forOwn from 'lodash/forOwn';
 import get from 'lodash/get';
+import includes from 'lodash/includes';
 import keys from 'lodash/keys';
+import pick from 'lodash/pick';
 import set from 'lodash/set';
 import throttle from 'lodash/throttle';
 import unset from 'lodash/unset';
@@ -20,14 +22,16 @@ class BlueForm extends React.Component {
     this.onSelectDate = this.onSelectDate.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.validateInput = this.validateInput.bind(this);
+    this.renderFields = this.renderFields.bind(this);
+    this.renderSections = this.renderSections.bind(this);
 
     const { data = {}, schema, type = 'insert' } = this.props;
     let formDoc = {};
     if (type === 'update') {
-      formDoc = data;
+      let schemaKeys = keys(schema._schema);
+      formDoc = pick(data, schemaKeys);
     }
     this.state = {
-      context: schema.newContext(),
       disabled: false,
       errors: {},
       formDoc: formDoc
@@ -136,18 +140,20 @@ class BlueForm extends React.Component {
     this.validateInput();
   }
   validateInput() {
-    let { context, formDoc } = this.state;
+    let { schema } = this.props;
+    let { formDoc } = this.state;
+    let schemaContext = schema.newContext();
     let cleanDoc = this.cleanFormDoc(formDoc);
-    let isValid = context.validate(cleanDoc);
+    let isValid = schemaContext.validate(cleanDoc);
     let errors = {};
     if (isValid) {
       this.setState({
         errors: errors
       });
     } else {
-      let invalidKeys = context.invalidKeys();
+      let invalidKeys = schemaContext.invalidKeys();
       invalidKeys.forEach(function(key) {
-        errors[key.name] = context.keyErrorMessage(key.name);
+        errors[key.name] = schemaContext.keyErrorMessage(key.name);
       });
       this.setState({
         errors: errors
@@ -177,9 +183,10 @@ class BlueForm extends React.Component {
       e.preventDefault();
     }
     const { clearOnSuccess = true, disableOnSubmit = false, onError, schema, submit, type = 'insert' } = this.props;
-    const { context, disabled, formDoc } = this.state;
+    const { disabled, formDoc } = this.state;
+    let schemaContext = schema.newContext();
     let cleanDoc = this.cleanFormDoc(formDoc);
-    let isValid = context.validate(cleanDoc);
+    let isValid = schemaContext.validate(cleanDoc);
 
     if (isValid) {
       this.setState({
@@ -196,10 +203,10 @@ class BlueForm extends React.Component {
       }
       submit(cleanDoc);
     } else {
-      let invalidKeys = context.invalidKeys();
+      let invalidKeys = schemaContext.invalidKeys();
       let errors = {};
       invalidKeys.forEach(function(key) {
-        errors[key.name] = context.keyErrorMessage(key.name);
+        errors[key.name] = schemaContext.keyErrorMessage(key.name);
       });
       this.setState({
         errors: errors
@@ -209,33 +216,68 @@ class BlueForm extends React.Component {
       }
     }
   }
+  renderFields(fields) {
+    const { schema } = this.props;
+
+    let renderedFields = fields.map((key, i) => {
+      let schemaObj = schema._schema[key];
+      if (get(schemaObj, 'blueform.conditional')) {
+        return (
+          <BlueFormIf key={ i } condition={ get(schemaObj, 'blueform.conditional.condition') } data={ get(schemaObj, 'blueform.conditional.data') } property={ get(schemaObj, 'blueform.conditional.property') } value={ get(schemaObj, 'blueform.conditional.value') }>
+            <BlueFormInput name={ key } />
+          </BlueFormIf>
+        );
+      } else {
+        return <BlueFormInput key={ i } name={ key } />;
+      }
+    });
+    return renderedFields;
+  }
+  renderSections(sections) {
+    const { schema } = this.props;
+    let self = this;
+    /**
+     * Make sure section fields exist in schema
+     */
+    let schemaKeys = keys(schema._schema);
+    sections.forEach((section) => {
+      section.fields.forEach((field) => {
+        if (!includes(schemaKeys, field)) {
+          throw new Error(`Section field ${field} does not exist in schema`);
+        }
+      });
+    });
+    let renderedSections = sections.map((section, i) => {
+      return (
+        <div key={ i } className="ui segment">
+          <h3>{ section.title }</h3>
+          { self.renderFields(section.fields) }
+        </div>
+      );
+    });
+    return renderedSections;
+  }
   render() {
-    const { children, schema } = this.props;
+    const { children, schema, sections } = this.props;
     const { errors, formDoc } = this.state;
+    const self = this;
     if (!!children) {
       return (
-          <div>
-          {/* keys(errors).length > 0 ? <BlueFormErrors errors={ errors } /> : '' */}
-          <form className="ui form" onSubmit={ this.onSubmit }>
-          { children }
+        <form className="ui form" onSubmit={ this.onSubmit }>
+        { children }
         </form>
-          </div>
       );
-    } else {
+    } else if (!!sections) {
       return (
         <form className="ui form" onSubmit={ this.onSubmit }>
-          { keys(schema._schema).map((key, i) => {
-            let schemaObj = schema._schema[key];
-            if (get(schemaObj, 'blueform.conditional')) {
-              return (
-                  <BlueFormIf key={ i } condition={ get(schemaObj, 'blueform.conditional.condition') } data={ get(schemaObj, 'blueform.conditional.data') } property={ get(schemaObj, 'blueform.conditional.property') } value={ get(schemaObj, 'blueform.conditional.value') }>
-                    <BlueFormInput name={ key } />
-                  </BlueFormIf>
-              );
-            } else {
-              return <BlueFormInput key={ i } name={ key } />;
-            }
-          })}
+          { self.renderSections(sections) }
+        </form>
+      );
+    } else {
+      let fieldKeys = keys(schema._schema);
+      return (
+        <form className="ui form" onSubmit={ this.onSubmit }>
+          { self.renderFields(fieldKeys) }
         </form>
       );
     }
