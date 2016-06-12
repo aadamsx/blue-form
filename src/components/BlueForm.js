@@ -258,7 +258,7 @@ class BlueForm extends React.Component {
     return renderedSections;
   }
   render() {
-    const { children, schema, sections } = this.props;
+    const { autosave, children, schema, sections, type } = this.props;
     const { errors, formDoc } = this.state;
     const self = this;
     if (!!children) {
@@ -271,6 +271,7 @@ class BlueForm extends React.Component {
       return (
         <form className="ui form" onSubmit={ this.onSubmit }>
           { self.renderSections(sections) }
+          { type === 'insert' || !autosave ? <BlueFormInput type="submit" /> : null }
         </form>
       );
     } else {
@@ -278,6 +279,7 @@ class BlueForm extends React.Component {
       return (
         <form className="ui form" onSubmit={ this.onSubmit }>
           { self.renderFields(fieldKeys) }
+          { type === 'insert' || !autosave ? <BlueFormInput type="submit" /> : null }
         </form>
       );
     }
