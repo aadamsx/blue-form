@@ -12,10 +12,10 @@ class BlueFormInput extends React.Component {
   }
   componentDidMount() {
     const { name } = this.props;
-    const { inputOnChange, onSelectDate, schema } = this.context;
+    const { form, inputOnChange, onSelectDate } = this.context;
 
     const fieldType = this.getFieldType();
-    const schemaObj = schema._schema[name];
+    const schemaObj = form.schema._schema[name];
     let self = this;
 
     /**
@@ -52,12 +52,12 @@ class BlueFormInput extends React.Component {
   }
   getFieldType() {
     const { name, type = 'text' } = this.props;
-    const { schema } = this.context;
+    const { form } = this.context;
 
-    let schemaObj = schema._schema[name];
+    let schemaObj = form.schema._schema[name];
     let fieldType;
     if (get(schemaObj, 'blueform.type')) {
-      fieldType = schemaObj.blueform.type;
+      fieldType = get(schemaObj, 'blueform.type');
     } else {
       fieldType = type;
     }
@@ -75,30 +75,36 @@ class BlueFormInput extends React.Component {
     }
   }
   render() {
-    const { className, mask, name, text, type = 'text' } = this.props;
-    const { autosave, data, disabled, errors, formDoc, inputOnChange, onSubmit, schema, selectOnChange } = this.context;
+    const { className, inputOpts, mask, name, text, type = 'text' } = this.props;
+    const { autosave, data, disabled, errors, form, formDoc, inputOnChange, onSubmit, selectOnChange } = this.context;
 
     const fieldType = this.getFieldType();
     let schemaObj;
+    let fieldValue;
     if (fieldType !== 'submit') {
-      schemaObj = schema._schema[name];
+      schemaObj = form.schema._schema[name];
+      fieldValue = get(formDoc, name);
     }
 
     let maskOpts;
     if (fieldType === 'mask') {
-      let maskOpts = mask;
+      maskOpts = mask;
       if (get(schemaObj, 'blueform.maskOpts')) {
         maskOpts = get(schemaObj, 'blueform.maskOpts');
       }
     }
-    console.log(schemaObj);
+
+    let options = inputOpts;
+    if (get(schemaObj, 'blueform.inputOpts')) {
+      options = get(schemaObj, 'blueform.inputOpts');
+    }
 
     switch (fieldType) {
       case 'boolean-select':
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
-            <select name={ name } onChange={ selectOnChange } value={ get(formDoc, name) }>
+            <select name={ name } onChange={ selectOnChange } value={ !!fieldValue ? fieldValue : '' }>
               <option value="">(Select One)</option>
               <option value={ true }>Yes</option>
               <option value={ false }>No</option>
@@ -110,7 +116,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <div className="ui checkbox">
-            <input name={ name } id={ name } type="checkbox" defaultChecked={ !!get(formDoc, name) ? get(formDoc, name) : false } defaultValue={ !!get(formDoc, name) ? get(formDoc, name) : false }/>
+            <input name={ name } id={ name } type="checkbox" defaultChecked={ !!fieldValue ? fieldValue : false } defaultValue={ !!fieldValue ? fieldValue : false }/>
               <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
             </div>
             { this.renderError() }
@@ -120,7 +126,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
-            <input type={ type } className="datetimepicker" name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } defaultValue={ get(formDoc, name) }/>
+            <input type={ type } className="datetimepicker" name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } defaultValue={ !!fieldValue ? fieldValue : '' }/>
             { this.renderError() }
           </div>
         );
@@ -128,7 +134,7 @@ class BlueFormInput extends React.Component {
         return (
             <div className={ !!errors[name] ? 'field error' : 'field' }>
               <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
-              <MaskedInput mask={ maskOpts.mask } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } value={ get(formDoc, name) }/>
+            <MaskedInput mask={ maskOpts.mask } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } value={ !!fieldValue ? fieldValue : '' }/>
             { this.renderError() }
             </div>
         );
@@ -136,7 +142,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
-            <select name={ name } onChange={ selectOnChange } value={ get(formDoc, name) }>
+            <select name={ name } onChange={ selectOnChange } value={ !!fieldValue ? fieldValue : '' }>
               <option value="">(Select One)</option>
               { schemaObj.allowedValues.map( (val, i) => {
                   if (val === '') {
@@ -151,14 +157,14 @@ class BlueFormInput extends React.Component {
       case 'submit':
         return (
           <div className="field">
-            <input type="submit" value={ !!text ? text : 'Submit' } className={ "ui large button " + className } disabled={ disabled } />
+            <input type="submit" value={ !!text ? text : 'Submit' } className={ "ui button " + className } disabled={ disabled } />
           </div>
         );
       case 'text':
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
-            <input type={ type } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } defaultValue={ get(formDoc, name) }/>
+            <input type={ type } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } value={ !!fieldValue ? fieldValue : '' } { ...options } />
             { this.renderError() }
           </div>
         );
@@ -166,7 +172,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
-            <textarea name={ name } rows={ get(schemaObj, 'blueform.rows') } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } value={ get(formDoc, name) }/>
+            <textarea name={ name } rows={ get(schemaObj, 'blueform.rows') } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } value={ !!fieldValue ? fieldValue : '' }/>
             { this.renderError() }
           </div>
         );
@@ -174,7 +180,7 @@ class BlueFormInput extends React.Component {
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
-            <input type={ type } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } value={ get(formDoc, name) }/>
+            <input type={ type } name={ name } onBlur={ !!autosave ? onSubmit : null } onChange={ inputOnChange } placeholder={ !!get(schemaObj, 'blueform.placeholder') ? get(schemaObj, 'blueform.placeholder') : null } value={ !!fieldValue ? fieldValue : '' }/>
             { this.renderError() }
           </div>
         );
@@ -188,12 +194,12 @@ BlueFormInput.contextTypes = {
   data: React.PropTypes.object,
   disabled: React.PropTypes.bool,
   errors: React.PropTypes.object,
+  form: React.PropTypes.object,
   formDoc: React.PropTypes.object,
   inputOnChange: React.PropTypes.func,
   onSelectDate: React.PropTypes.func,
   onSubmit: React.PropTypes.func,
-  schema: React.PropTypes.object,
-  selectOnChange: React.PropTypes.func,
+  selectOnChange: React.PropTypes.func
 }
 
 export default BlueFormInput;
