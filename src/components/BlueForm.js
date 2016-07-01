@@ -25,10 +25,10 @@ class BlueForm extends React.Component {
     this.renderFields = this.renderFields.bind(this);
     this.renderSections = this.renderSections.bind(this);
 
-    const { data = {}, schema, type = 'insert' } = this.props;
+    const { data = {}, form, type = 'insert' } = this.props;
     let formDoc = {};
     if (type === 'update') {
-      let schemaKeys = keys(schema._schema);
+      let schemaKeys = keys(form.schema._schema);
       formDoc = pick(data, schemaKeys);
     }
     this.state = {
@@ -38,7 +38,7 @@ class BlueForm extends React.Component {
     };
   }
   componentWillReceiveProps(nextProps) {
-    const { data, schema, type = 'insert' } = nextProps;
+    const { data, type = 'insert' } = nextProps;
     if (type === 'update') {
       this.setState({
         formDoc: data
@@ -46,19 +46,19 @@ class BlueForm extends React.Component {
     }
   }
   getChildContext() {
-    const { autosave, clearOnSuccess = true, data, disableOnSubmit = false, schema, type = 'insert' } = this.props;
+    const { autosave, clearOnSuccess = true, data, disableOnSubmit = false, form, type = 'insert' } = this.props;
     const { disabled, errors, formDoc } = this.state;
     let context = {
       autosave: autosave,
       clearOnSuccess: clearOnSuccess,
       disabled: disabled,
       disableOnSubmit: disableOnSubmit,
+      form: form,
       formDoc: formDoc,
       errors: errors,
       inputOnChange: this.inputOnChange,
       onSelectDate: this.onSelectDate,
       onSubmit: this.onSubmit,
-      schema: schema,
       selectOnChange: this.selectOnChange,
       type: type
     };
@@ -140,14 +140,15 @@ class BlueForm extends React.Component {
     this.validateInput();
   }
   validateInput() {
-    let { schema } = this.props;
+    let { form } = this.props;
     let { formDoc } = this.state;
-    let schemaContext = schema.newContext();
+    let schemaContext = form.schema.newContext();
     let cleanDoc = this.cleanFormDoc(formDoc);
     let isValid = schemaContext.validate(cleanDoc);
     let errors = {};
     if (isValid) {
       this.setState({
+        disabled: false,
         errors: errors
       });
     } else {
@@ -156,18 +157,19 @@ class BlueForm extends React.Component {
         errors[key.name] = schemaContext.keyErrorMessage(key.name);
       });
       this.setState({
+        disabled: true,
         errors: errors
       });
     }
   }
   cleanFormDoc(formDoc) {
     let cleanedDoc = {};
-    const { schema } = this.props;
+    const { form } = this.props;
     /**
      * Use lodash _.set method to set value of nested properties
      */
     forOwn(formDoc, function(val, key) {
-      if (schema._schemaKeys.indexOf(key) !== -1 && val !== '') {
+      if (form.schema._schemaKeys.indexOf(key) !== -1 && val !== '') {
         set(cleanedDoc, key, val);
       }
     });
@@ -182,9 +184,9 @@ class BlueForm extends React.Component {
     if (e) {
       e.preventDefault();
     }
-    const { clearOnSuccess = true, disableOnSubmit = false, onError, schema, submit, type = 'insert' } = this.props;
+    const { clearOnSuccess = true, disableOnSubmit = false, form, onError, submit, type = 'insert' } = this.props;
     const { disabled, formDoc } = this.state;
-    let schemaContext = schema.newContext();
+    let schemaContext = form.schema.newContext();
     let cleanDoc = this.cleanFormDoc(formDoc);
     let isValid = schemaContext.validate(cleanDoc);
 
@@ -217,13 +219,13 @@ class BlueForm extends React.Component {
     }
   }
   renderFields(fields) {
-    const { schema } = this.props;
+    const { form } = this.props;
 
     let renderedFields = fields.map((key, i) => {
-      let schemaObj = schema._schema[key];
+      let schemaObj = form.schema._schema[key];
       if (get(schemaObj, 'blueform.conditional')) {
         return (
-          <BlueFormIf key={ i } condition={ get(schemaObj, 'blueform.conditional.condition') } data={ get(schemaObj, 'blueform.conditional.data') } property={ get(schemaObj, 'blueform.conditional.property') } value={ get(schemaObj, 'blueform.conditional.value') }>
+          <BlueFormIf key={ i } conditional={ get(schemaObj, 'blueform.conditional') } >
             <BlueFormInput name={ key } />
           </BlueFormIf>
         );
@@ -234,12 +236,12 @@ class BlueForm extends React.Component {
     return renderedFields;
   }
   renderSections(sections) {
-    const { schema } = this.props;
+    const { form } = this.props;
     let self = this;
     /**
      * Make sure section fields exist in schema
      */
-    let schemaKeys = keys(schema._schema);
+    let schemaKeys = keys(form.schema._schema);
     sections.forEach((section) => {
       section.fields.forEach((field) => {
         if (!includes(schemaKeys, field)) {
@@ -258,7 +260,7 @@ class BlueForm extends React.Component {
     return renderedSections;
   }
   render() {
-    const { autosave, children, schema, sections, type } = this.props;
+    const { autosave, children, form, type } = this.props;
     const { errors, formDoc } = this.state;
     const self = this;
     if (!!children) {
@@ -267,19 +269,23 @@ class BlueForm extends React.Component {
         { children }
         </form>
       );
-    } else if (!!sections) {
+    } else if (!!form.sections) {
       return (
         <form className="ui form" onSubmit={ this.onSubmit }>
-          { self.renderSections(sections) }
-          { type === 'insert' || !autosave ? <BlueFormInput type="submit" /> : null }
+          { self.renderSections(form.sections) }
+          <div className="actions">
+            { type === 'insert' || !autosave ? <BlueFormInput className={ get(form, 'options.submitClassName') } text={ get(form, 'options.submitText') } type="submit" /> : null }
+          </div>
         </form>
       );
     } else {
-      let fieldKeys = keys(schema._schema);
+      let fieldKeys = keys(form.schema._schema);
       return (
         <form className="ui form" onSubmit={ this.onSubmit }>
           { self.renderFields(fieldKeys) }
-          { type === 'insert' || !autosave ? <BlueFormInput type="submit" /> : null }
+          <div className="actions">
+            { type === 'insert' || !autosave ? <BlueFormInput className={ get(form, 'options.submitClassName') } text={ get(form, 'options.submitText') } type="submit" /> : null }
+          </div>
         </form>
       );
     }
@@ -298,11 +304,11 @@ BlueForm.childContextTypes = {
   disabled: React.PropTypes.bool,
   disableOnSubmit: React.PropTypes.bool,
   errors: React.PropTypes.object,
+  form: React.PropTypes.object,
   formDoc: React.PropTypes.object,
   inputOnChange: React.PropTypes.func,
   onSelectDate: React.PropTypes.func,
   onSubmit: React.PropTypes.func,
-  schema: React.PropTypes.object,
   selectOnChange: React.PropTypes.func,
   type: React.PropTypes.string
 }

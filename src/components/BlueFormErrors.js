@@ -6,7 +6,7 @@ class BlueFormErrors extends React.Component {
     super(props);
   }
   render() {
-    const { errors } = this.props
+    const { errors } = this.props;
     let renderErrors = function(errors) {
       let errorKeys = keys(errors);
       return errorKeys.map((error, i) => {
