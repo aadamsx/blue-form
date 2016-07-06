@@ -72,11 +72,11 @@ class BlueForm extends React.Component {
   onSelectDate(date, name) {
     let { formDoc } = this.state;
 
-    if (date === '') {
-      unset(formDoc, name);
-    } else {
+    // if (date === '') {
+    //   unset(formDoc, name);
+    // } else {
       set(formDoc, name, date);
-    }
+    // }
 
     this.setState({
       formDoc
@@ -85,7 +85,7 @@ class BlueForm extends React.Component {
     this.validateInput();
   }
   inputOnChange(e) {
-    let { autosave } = this.context;
+    let { autosave } = this.props;
     let { formDoc } = this.state;
 
     let name = e.target.getAttribute('name');
@@ -94,17 +94,17 @@ class BlueForm extends React.Component {
       val = e.target.checked;
     }
 
-    if (val === '') {
-      unset(formDoc, name);
-    } else {
+    // if (val === '') {
+    //   unset(formDoc, name);
+    // } else {
       set(formDoc, name, val);
-    }
+    // }
 
     this.setState({
       formDoc
     });
 
-    if (autosave) {
+    if (autosave && e.checkbox) {
       this.onSubmit();
     }
 
@@ -123,11 +123,11 @@ class BlueForm extends React.Component {
       val = false;
     }
 
-    if (val === '' || val === '(Select One)') {
-      unset(formDoc, name);
-    } else {
+    // if (val === '(Select One)') {
+    //   unset(formDoc, name);
+    // } else {
       set(formDoc, name, val);
-    }
+    // }
 
     this.setState({
       formDoc
@@ -169,7 +169,7 @@ class BlueForm extends React.Component {
      * Use lodash _.set method to set value of nested properties
      */
     forOwn(formDoc, function(val, key) {
-      if (form.schema._schemaKeys.indexOf(key) !== -1 && val !== '') {
+      if (form.schema._schemaKeys.indexOf(key) !== -1) {
         set(cleanedDoc, key, val);
       }
     });
