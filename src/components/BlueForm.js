@@ -22,6 +22,7 @@ class BlueForm extends React.Component {
     this.onSelectDate = this.onSelectDate.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
     this.validateInput = this.validateInput.bind(this);
+    this.renderField = this.renderField.bind(this);
     this.renderFields = this.renderFields.bind(this);
     this.renderSections = this.renderSections.bind(this);
 
@@ -123,11 +124,11 @@ class BlueForm extends React.Component {
       val = false;
     }
 
-    // if (val === '(Select One)') {
-    //   unset(formDoc, name);
-    // } else {
+    if (val === '(Select One)') {
+      unset(formDoc, name);
+    } else {
       set(formDoc, name, val);
-    // }
+    }
 
     this.setState({
       formDoc
@@ -218,19 +219,32 @@ class BlueForm extends React.Component {
       }
     }
   }
+  renderField(form, key, i) {
+    let schemaObj = form.schema._schema[key];
+    if (get(schemaObj, 'blueform.conditional')) {
+      return (
+          <BlueFormIf key={ i } conditional={ get(schemaObj, 'blueform.conditional') } >
+          <BlueFormInput name={ key } />
+          </BlueFormIf>
+      );
+    } else {
+      return <BlueFormInput key={ i } name={ key } />;
+    }
+  }
   renderFields(fields) {
     const { form } = this.props;
 
     let renderedFields = fields.map((key, i) => {
-      let schemaObj = form.schema._schema[key];
-      if (get(schemaObj, 'blueform.conditional')) {
+      if (typeof key === 'object') {
         return (
-          <BlueFormIf key={ i } conditional={ get(schemaObj, 'blueform.conditional') } >
-            <BlueFormInput name={ key } />
-          </BlueFormIf>
+          <div key={ i } className={ key.className }>
+            { key.fields.map((innerKey, innerI) => {
+              return this.renderField(form, innerKey, innerI);
+            })}
+          </div>
         );
       } else {
-        return <BlueFormInput key={ i } name={ key } />;
+        return this.renderField(form, key, i);
       }
     });
     return renderedFields;
@@ -244,8 +258,19 @@ class BlueForm extends React.Component {
     let schemaKeys = keys(form.schema._schema);
     sections.forEach((section) => {
       section.fields.forEach((field) => {
-        if (!includes(schemaKeys, field)) {
-          throw new Error(`Section field ${field} does not exist in schema`);
+        /**
+         * Check if field is a custom object instead of a string
+         */
+        if (typeof field === 'object') {
+          field.fields.forEach((innerField) => {
+            if (!includes(schemaKeys, innerField)) {
+              throw new Error(`Section field ${innerField} does not exist in schema`);
+            }
+          });
+        } else {
+          if (!includes(schemaKeys, field)) {
+            throw new Error(`Section field ${field} does not exist in schema`);
+          }
         }
       });
     });
