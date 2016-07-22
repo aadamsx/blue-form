@@ -140,17 +140,27 @@ class BlueFormInput extends React.Component {
             </div>
         );
       case 'select':
+        let selectOptions;
+        if (!!(get(schemaObj, 'blueform.selectOptions'))) {
+          let blueformSelectOptions = get(schemaObj, 'blueform.selectOptions');
+          selectOptions = blueformSelectOptions.map((option, i) => {
+            return <option key={ i } value={ option.value }>{ option.label}</option>;
+          });
+        } else {
+          selectOptions = schemaObj.allowedValues.map((val, i) => {
+            if (val === '') {
+              return null;
+            }
+            return <option key={ i } value={ val }>{ val }</option>;
+          });
+        }
+
         return (
           <div className={ !!errors[name] ? 'field error' : 'field' }>
             <label htmlFor={ name } dangerouslySetInnerHTML={ {__html: schemaObj.label} } />
             <select name={ name } onChange={ selectOnChange } value={ !!fieldValue ? fieldValue : '' }>
               <option value="">(Select One)</option>
-              { schemaObj.allowedValues.map( (val, i) => {
-                  if (val === '') {
-                    return null;
-                  }
-                  return <option key={ i } value={ val }>{ val }</option>;
-              }) }
+              { selectOptions }
             </select>
             { this.renderError() }
           </div>

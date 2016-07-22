@@ -73,17 +73,13 @@ class BlueForm extends React.Component {
   onSelectDate(date, name) {
     let { formDoc } = this.state;
 
-    // if (date === '') {
-    //   unset(formDoc, name);
-    // } else {
-      set(formDoc, name, date);
-    // }
+    set(formDoc, name, date);
 
     this.setState({
       formDoc
     });
 
-    this.validateInput();
+    this.validateInput(name);
   }
   inputOnChange(e) {
     let { autosave } = this.props;
@@ -95,11 +91,7 @@ class BlueForm extends React.Component {
       val = e.target.checked;
     }
 
-    // if (val === '') {
-    //   unset(formDoc, name);
-    // } else {
-      set(formDoc, name, val);
-    // }
+    set(formDoc, name, val);
 
     this.setState({
       formDoc
@@ -109,7 +101,7 @@ class BlueForm extends React.Component {
       this.onSubmit();
     }
 
-    this.validateInput();
+    this.validateInput(name);
   }
   selectOnChange(e) {
     let { autosave } = this.props;
@@ -138,14 +130,14 @@ class BlueForm extends React.Component {
       this.onSubmit();
     }
 
-    this.validateInput();
+    this.validateInput(name);
   }
-  validateInput() {
+  validateInput(name) {
     let { form } = this.props;
     let { formDoc } = this.state;
     let schemaContext = form.schema.newContext();
     let cleanDoc = this.cleanFormDoc(formDoc);
-    let isValid = schemaContext.validate(cleanDoc);
+    let isValid = schemaContext.validateOne(cleanDoc, name);
     let errors = {};
     if (isValid) {
       this.setState({
